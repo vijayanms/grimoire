@@ -1,0 +1,80 @@
+version: "3"
+
+vars:
+  BINARY: grimoire
+  OUT_DIR: ./dist
+  IMPORT_DIR: ./out
+
+tasks:
+  build:
+    desc: Build the binary
+    cmds:
+      - go build -o {{.OUT_DIR}}/{{.BINARY}} ./cmd/grimoire
+    generates:
+      - "{{.OUT_DIR}}/{{.BINARY}}"
+
+  install:
+    desc: Build and install to $GOPATH/bin
+    cmds:
+      - go install ./cmd/grimoire
+
+  run:
+    desc: Run (reads OPNSENSE_URI, OPNSENSE_API_KEY, OPNSENSE_API_SECRET from .envrc/.env if present)
+    dotenv: [".env"]
+    cmds:
+      - |
+        go run ./cmd/grimoire \
+          ${OPNSENSE_URI:+--uri "$OPNSENSE_URI"} \
+          ${OPNSENSE_API_KEY:+--api-key "$OPNSENSE_API_KEY"} \
+          ${OPNSENSE_API_SECRET:+--api-secret "$OPNSENSE_API_SECRET"} \
+          --out-dir "{{.IMPORT_DIR}}" \
+          {{.CLI_ARGS}}
+
+  fmt:
+    desc: Format Go source
+    cmds:
+      - gofmt -w .
+
+  lint:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - go test ./...
+
+  clean:
+    desc: Remove build artifacts
+    cmds:
+      - rm -rf {{.OUT_DIR}}
+
+  clean-import:
+    desc: Remove generated import directory
+    cmds:
+      - rm -rf {{.IMPORT_DIR}}
+
+  tidy:
+    desc: Tidy go module dependencies
+    cmds:
+      - go mod tidy
+
+  update-allowlist:
+    desc: Regenerate internal/resources/allowlist_test.go from terraform-provider-opnsense's GitHub source
+    cmds:
+      - ./scripts/update_allowlist.sh
+
+  validate:
+    desc: Validate generated output in out/ against the published terraform-provider-opnsense schema
+    dir: "{{.IMPORT_DIR}}"
+    preconditions:
+      - sh: test -f provider.tf
+        msg: "no generated output in {{.IMPORT_DIR}} — run 'task run' first"
+    cmds:
+      - tofu init -input=false
+      - tofu validate
+
+  check:
+    desc: fmt + lint + test
+    deps: [fmt, lint, test]
