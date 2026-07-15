@@ -79,8 +79,6 @@ If you have an OPNsense firewall configured by hand and want to bring it under T
 
    A diff in the last `tofu plan` means the generated HCL doesn't exactly match what the provider itself reads back — treat that as a bug in grimoire's rendering for that resource, not something to work around by hand-editing state.
 
-6. **Fill in real credentials.** `provider.tf` ships with placeholder `api_key`/`api_secret` values — replace them (or wire up a variable/secret manager) before running this anywhere beyond the initial import.
-
 From here the imported `.tf` files are yours — edit, restructure, split across modules, whatever your Terraform layout normally looks like. Re-running `grimoire` later just regenerates a fresh snapshot; it doesn't touch existing state.
 
 ## Usage
@@ -127,7 +125,9 @@ task run -- --insecure
 
 ```
 <out-dir>/
-├── provider.tf              # provider block with placeholder credentials
+├── provider.tf              # provider block, credentials via variables
+├── variables.tf             # variable declarations for uri/api_key/api_secret
+├── terraform.tfvars         # real credential values
 ├── imports.tf               # native `import` blocks, one per resource
 ├── opnsense.log             # API request/response trace
 ├── firewall_alias.tf
