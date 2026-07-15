@@ -8,7 +8,7 @@ import (
 func init() {
 	Registry = append(Registry, ResourceDef{
 		TFType:   "opnsense_unbound_domain_override",
-		Filename: "unbound_domain_override.tf",
+		Filename: "unbound_domain_overrides.tf",
 		Fetch:    fetchUnboundDomainOverride,
 	})
 }

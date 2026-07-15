@@ -2,7 +2,7 @@
 
 ![grimoire](grimoire.jpg)
 
-`grimoire` reads a live OPNsense instance via its REST API and generates Terraform/OpenTofu configuration files plus an `import.sh` that imports existing objects into state.
+`grimoire` reads a live OPNsense instance via its REST API and generates Terraform/OpenTofu configuration files plus `imports.tf` (native `import` blocks) that bring existing objects into state.
 
 It covers the UUID-based resource types supported by [browningluke/terraform-provider-opnsense](https://github.com/browningluke/terraform-provider-opnsense).
 
@@ -13,9 +13,19 @@ The generated output directory also includes `opnsense.log` with the full API re
 - Go 1.23+
 - [Task](https://taskfile.dev) (for build tasks)
 - An OPNsense instance with API access enabled
-- OpenTofu or Terraform (for running `import.sh` and `task validate`)
+- OpenTofu 1.6+ or Terraform 1.5+ (for `import` blocks and `task validate`)
 
 ## Installation
+
+A prebuilt binary is checked into the repo at `dist/grimoire` (x86-64 Linux) — clone and run it directly, no Go toolchain or build step required:
+
+```sh
+git clone https://github.com/vijayanms/grimoire
+cd grimoire
+./dist/grimoire --uri https://opnsense.example.com --api-key <key> --api-secret <secret> --out-dir ./tf-out
+```
+
+On any other platform (macOS, Windows, arm64), or to build off a newer commit than the checked-in binary:
 
 ```sh
 go install github.com/vijayanms/grimoire/cmd/grimoire@latest
@@ -45,7 +55,7 @@ If you have an OPNsense firewall configured by hand and want to bring it under T
      --out-dir ./tf-out
    ```
 
-   This queries every supported resource type and writes one `.tf` file per type (only for types that actually have data — empty resource types produce no file), plus `provider.tf`, `variables.tf`, `terraform.tfvars`, and `import.sh`.
+   This queries every supported resource type and writes one `.tf` file per type (only for types that actually have data — empty resource types produce no file), plus `provider.tf`, `variables.tf`, `terraform.tfvars`, and `imports.tf`.
 
 3. **Read the output before trusting it.** Skim the generated `.tf` files. `opnsense.log` in the output directory has the full raw API trace if you need to cross-check a value.
 
@@ -60,11 +70,14 @@ If you have an OPNsense firewall configured by hand and want to bring it under T
    ```sh
    cd tf-out
    tofu init
-   bash import.sh
-   tofu plan   # should show "No changes" if generation was accurate
+   tofu plan    # shows the pending imports (from imports.tf) plus any attribute drift
+   tofu apply   # executes the imports — no resources are created, they already exist
+   tofu plan    # should show "No changes" if generation was accurate
    ```
 
-   `tofu plan` showing a diff here means the generated HCL doesn't exactly match what the provider itself reads back — treat that as a bug in grimoire's rendering for that resource, not something to work around by hand-editing state.
+   `imports.tf`'s `import` blocks are resolved by `tofu plan`/`apply` through Terraform's normal parallel resource graph, instead of shelling out to `tofu import` once per resource. They're safe to leave in place afterward — once a resource is in state, its `import` block is a no-op on subsequent runs.
+
+   A diff in the last `tofu plan` means the generated HCL doesn't exactly match what the provider itself reads back — treat that as a bug in grimoire's rendering for that resource, not something to work around by hand-editing state.
 
 6. **Fill in real credentials.** `provider.tf` ships with placeholder `api_key`/`api_secret` values — replace them (or wire up a variable/secret manager) before running this anywhere beyond the initial import.
 
@@ -115,7 +128,7 @@ task run -- --insecure
 ```
 <out-dir>/
 ├── provider.tf              # provider block with placeholder credentials
-├── import.sh                # tofu import commands, one per resource
+├── imports.tf               # native `import` blocks, one per resource
 ├── opnsense.log             # API request/response trace
 ├── firewall_alias.tf
 ├── firewall_filter.tf
@@ -128,8 +141,9 @@ task run -- --insecure
 ```sh
 cd <out-dir>
 tofu init
-bash import.sh
-tofu plan   # should show no changes if generation was accurate
+tofu plan    # shows the pending imports plus any attribute drift
+tofu apply   # executes the imports
+tofu plan    # should show no changes if generation was accurate
 ```
 
 ## Covered resources

@@ -38,7 +38,7 @@ func fetchKeaDHCPv4Reservation(ctx context.Context, f Fetcher, tracker LabelTrac
 		hcl := fmt.Sprintf(`resource "opnsense_kea_dhcpv4_reservation" %s {
   subnet_id   = %s
   ip_address  = %s
-  hw_address  = %s
+  mac_address = %s
   hostname    = %s
   description = %s
 }

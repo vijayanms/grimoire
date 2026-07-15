@@ -31,7 +31,7 @@ func TestFetchKeaDHCPv4Reservation(t *testing.T) {
 	for _, want := range []string{
 		`subnet_id   = "1"`,
 		`ip_address  = "10.0.0.50"`,
-		`hw_address  = "aa:bb:cc:dd:ee:ff"`,
+		`mac_address = "aa:bb:cc:dd:ee:ff"`,
 		`hostname    = "myhost"`,
 		`description = "static host"`,
 	} {

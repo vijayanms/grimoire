@@ -27,7 +27,6 @@ func fetchTrustCert(ctx context.Context, f Fetcher, tracker LabelTracker) ([]Ent
 		}
 		label := tracker.Derive(d.Description, d.CommonName, uuid)
 		hcl := fmt.Sprintf(`resource "opnsense_trust_cert" %s {
-  ref_id               = %s
   description          = %s
   caref                = %s
   crt                  = %s
@@ -51,17 +50,8 @@ func fetchTrustCert(ctx context.Context, f Fetcher, tracker LabelTracker) ([]Ent
   altnames_ip          = %s
   altnames_uri         = %s
   altnames_email       = %s
-  in_use               = %s
-  is_user              = %s
-  crt_payload          = %s
-  csr_payload          = %s
-  prv_payload          = %s
-  name                 = %s
-  valid_from           = %s
-  valid_to             = %s
 }
 `, hclString(label),
-			hclStringOrNull(d.RefId),
 			hclString(d.Description),
 			hclString(d.CaRef.String()),
 			hclString(d.Crt),
@@ -84,15 +74,7 @@ func fetchTrustCert(ctx context.Context, f Fetcher, tracker LabelTracker) ([]Ent
 			hclStringOrNull(d.AltnamesDns),
 			hclStringOrNull(d.AltnamesIp),
 			hclStringOrNull(d.AltnamesUri),
-			hclStringOrNull(d.AltnamesEmail),
-			hclStringOrNull(d.InUse),
-			hclStringOrNull(d.IsUser),
-			hclStringOrNull(d.CrtPayload),
-			hclStringOrNull(d.CsrPayload),
-			hclStringOrNull(d.PrvPayload),
-			hclStringOrNull(d.Name),
-			hclStringOrNull(d.ValidFrom),
-			hclStringOrNull(d.ValidTo))
+			hclStringOrNull(d.AltnamesEmail))
 		entries = append(entries, Entry{UUID: uuid, Label: label, HCL: hcl})
 	}
 	return entries, nil

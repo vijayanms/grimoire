@@ -1,1 +1,8 @@
+dist/
+.env
+.envrc
+opnsense-import/
+*.tfvars
 out/
+.codegraph/
+docs/plans/

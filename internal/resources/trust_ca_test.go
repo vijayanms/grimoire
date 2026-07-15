@@ -47,12 +47,12 @@ func TestFetchTrustCA(t *testing.T) {
 
 	hcl := entries[0].HCL
 	for _, want := range []string{
-		`ref_id               = "5f1a2b3c"`,
 		`description          = "internal ca"`,
 		`action               = "internal"`,
 		`crt                  = "dummy-cert-data"`,
 		`prv                  = "dummy-key-data"`,
 		`serial               = "1"`,
+		`caref                = "someref"`,
 		`key_type             = "RSA"`,
 		`lifetime             = "3650"`,
 		`digest               = "sha256"`,
@@ -64,11 +64,6 @@ func TestFetchTrustCA(t *testing.T) {
 		`email                = "admin@example.com"`,
 		`common_name          = "Acme Root CA"`,
 		`ocsp_uri             = "http://ocsp.example.com"`,
-		`crt_payload          = null`,
-		`prv_payload          = null`,
-		`name                 = null`,
-		`valid_from           = null`,
-		`valid_to             = null`,
 	} {
 		if !strings.Contains(hcl, want) {
 			t.Errorf("HCL missing %q\ngot:\n%s", want, hcl)

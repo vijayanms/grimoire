@@ -76,5 +76,12 @@ tasks:
       - tofu validate
 
   check:
-    desc: fmt + lint + test
+    desc: fmt + lint + test + validate (validate skips if out/ hasn't been generated yet)
     deps: [fmt, lint, test]
+    cmds:
+      - |
+        if [ -f {{.IMPORT_DIR}}/provider.tf ]; then
+          task validate IMPORT_DIR="{{.IMPORT_DIR}}"
+        else
+          echo "skip: no generated output in {{.IMPORT_DIR}} — run 'task run' first for schema validation"
+        fi

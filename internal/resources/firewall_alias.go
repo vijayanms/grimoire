@@ -51,7 +51,7 @@ func fetchFirewallAlias(ctx context.Context, f Fetcher, tracker LabelTracker) ([
 			hclString(d.Interface.String()),
 			hclSet([]string(d.Content)),
 			hclSet([]string(d.Categories)),
-			hclFloat(stringToFloat64(d.UpdateFreq)),
+			hclFloat(stringToFloat64Default(d.UpdateFreq, -1)),
 			hclString(d.PathExpression),
 			hclBool(stringToBool(d.Statistics)),
 			hclStringOrNull(d.Description))

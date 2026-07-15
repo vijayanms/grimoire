@@ -56,7 +56,6 @@ func TestFetchTrustCert(t *testing.T) {
 
 	hcl := entries[0].HCL
 	for _, want := range []string{
-		`ref_id               = "6a2b3c4d"`,
 		`description          = "server cert"`,
 		`caref                = "internal-ca"`,
 		`crt                  = "dummy-cert-data"`,
@@ -76,8 +75,6 @@ func TestFetchTrustCert(t *testing.T) {
 		`email                = "ops@example.com"`,
 		`common_name          = "server.example.com"`,
 		`altnames_dns         = "server.example.com"`,
-		`in_use               = "1"`,
-		`is_user              = "0"`,
 	} {
 		if !strings.Contains(hcl, want) {
 			t.Errorf("HCL missing %q\ngot:\n%s", want, hcl)

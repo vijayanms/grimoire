@@ -53,7 +53,7 @@ func main() {
 	f := fetcher.New(*uri, *apiKey, *apiSecret, *insecure, logger)
 	ctx := context.Background()
 
-	var importLines []string
+	var importBlocks []string
 
 	for _, def := range resources.Registry {
 		if len(filter) > 0 && !filter[def.TFType] {
@@ -76,7 +76,7 @@ func main() {
 		for _, e := range entries {
 			sb.WriteString(e.HCL)
 			sb.WriteString("\n")
-			importLines = append(importLines, fmt.Sprintf("tofu import '%s.%s' '%s'", def.TFType, e.Label, e.UUID))
+			importBlocks = append(importBlocks, fmt.Sprintf("import {\n  to = %s.%s\n  id = %q\n}\n", def.TFType, e.Label, e.UUID))
 		}
 
 		tfPath := filepath.Join(*outDir, def.Filename)
@@ -87,17 +87,17 @@ func main() {
 		fmt.Printf("  wrote %d resources to %s\n", len(entries), def.Filename)
 	}
 
-	if err := writeProviderTF(*outDir, *uri); err != nil {
+	if err := writeProviderTF(*outDir, *uri, *apiKey, *apiSecret); err != nil {
 		fmt.Fprintf(os.Stderr, "error writing provider.tf: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := writeImportSh(*outDir, importLines); err != nil {
-		fmt.Fprintf(os.Stderr, "error writing import.sh: %v\n", err)
+	if err := writeImportsTF(*outDir, importBlocks); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing imports.tf: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("\ndone. %d import commands written to %s/import.sh\n", len(importLines), *outDir)
+	fmt.Printf("\ndone. %d import blocks written to %s/imports.tf\n", len(importBlocks), *outDir)
 }
 
 const providerTF = `terraform {
@@ -110,8 +110,8 @@ const providerTF = `terraform {
 
 provider "opnsense" {
   uri        = var.opnsense_uri
-  api_key    = "YOUR_API_KEY"
-  api_secret = "YOUR_API_SECRET"
+  api_key    = var.opnsense_api_key
+  api_secret = var.opnsense_api_secret
 }
 `
 
@@ -119,29 +119,32 @@ const variablesTF = `variable "opnsense_uri" {
   description = "OPNsense base URI"
   type        = string
 }
+
+variable "opnsense_api_key" {
+  description = "OPNsense API key"
+  type        = string
+  sensitive   = true
+}
+
+variable "opnsense_api_secret" {
+  description = "OPNsense API secret"
+  type        = string
+  sensitive   = true
+}
 `
 
-func writeProviderTF(outDir string, uri string) error {
+func writeProviderTF(outDir, uri, apiKey, apiSecret string) error {
 	if err := os.WriteFile(filepath.Join(outDir, "provider.tf"), []byte(providerTF), 0o644); err != nil {
 		return err
 	}
 	if err := os.WriteFile(filepath.Join(outDir, "variables.tf"), []byte(variablesTF), 0o644); err != nil {
 		return err
 	}
-	tfvars := fmt.Sprintf("opnsense_uri = %q\n", uri)
+	tfvars := fmt.Sprintf("opnsense_uri = %q\nopnsense_api_key = %q\nopnsense_api_secret = %q\n", uri, apiKey, apiSecret)
 	return os.WriteFile(filepath.Join(outDir, "terraform.tfvars"), []byte(tfvars), 0o644)
 }
 
-func writeImportSh(outDir string, lines []string) error {
-	var sb strings.Builder
-	sb.WriteString("#!/bin/sh\nset -e\n\n")
-	for _, l := range lines {
-		sb.WriteString(l)
-		sb.WriteString("\n")
-	}
-	path := filepath.Join(outDir, "import.sh")
-	if err := os.WriteFile(path, []byte(sb.String()), 0o755); err != nil {
-		return err
-	}
-	return nil
+func writeImportsTF(outDir string, blocks []string) error {
+	path := filepath.Join(outDir, "imports.tf")
+	return os.WriteFile(path, []byte(strings.Join(blocks, "\n")), 0o644)
 }
