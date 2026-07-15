@@ -41,25 +41,19 @@ func TestFetchKeaDHCPv4Subnet(t *testing.T) {
 
 	hcl := entries[0].HCL
 	for _, want := range []string{
-		`subnet      = "10.0.0.0/24"`,
-		`next_server = "10.0.0.1"`,
-		`pools       = ["10.0.0.100-10.0.0.200", "10.0.0.210-10.0.0.220"]`,
+		`subnet          = "10.0.0.0/24"`,
+		`next_server     = "10.0.0.1"`,
+		`pools           = ["10.0.0.100-10.0.0.200", "10.0.0.210-10.0.0.220"]`,
 		`match_client_id = true`,
-		`option_data_auto_collect = false`,
-		`description = "main subnet"`,
-		`routers             = ["10.0.0.1"]`,
-		`domain_name_servers = ["10.0.0.1", "10.0.0.2"]`,
-		`domain_name         = "example.com"`,
-		`tftp_server_name    = "tftp.example.com"`,
-		`boot_file_name      = "pxelinux.0"`,
-		`static_route {
-      destination = "192.168.1.0/24"
-      router      = "10.0.0.254"
-    }`,
-		`static_route {
-      destination = "192.168.2.0/24"
-      router      = "10.0.0.253"
-    }`,
+		`auto_collect    = false`,
+		`description     = "main subnet"`,
+		`routers         = ["10.0.0.1"]`,
+		`dns_servers     = ["10.0.0.1", "10.0.0.2"]`,
+		`domain_name     = "example.com"`,
+		`tftp_server     = "tftp.example.com"`,
+		`tftp_bootfile   = "pxelinux.0"`,
+		`{ destination_ip = "192.168.1.0/24", router_ip = "10.0.0.254" }`,
+		`{ destination_ip = "192.168.2.0/24", router_ip = "10.0.0.253" }`,
 	} {
 		if !strings.Contains(hcl, want) {
 			t.Errorf("HCL missing %q\ngot:\n%s", want, hcl)

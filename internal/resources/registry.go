@@ -44,8 +44,28 @@ var Registry []ResourceDef
 
 func stringToBool(s string) bool   { return s == "1" }
 func stringToInt64(s string) int64 { n, _ := strconv.ParseInt(strings.TrimSpace(s), 10, 64); return n }
+
+// stringToInt64Default parses s, falling back to def when s is empty or unparseable.
+// Use for fields whose provider schema treats a sentinel other than 0 as "unset".
+func stringToInt64Default(s string, def int64) int64 {
+	n, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)
+	if err != nil {
+		return def
+	}
+	return n
+}
 func stringToFloat64(s string) float64 {
 	f, _ := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	return f
+}
+
+// stringToFloat64Default parses s, falling back to def when s is empty or unparseable.
+// Use for fields whose provider schema treats a sentinel other than 0 as "unset".
+func stringToFloat64Default(s string, def float64) float64 {
+	f, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	if err != nil {
+		return def
+	}
 	return f
 }
 
@@ -59,6 +79,9 @@ func hclBool(b bool) string {
 func hclString(s string) string {
 	s = strings.ReplaceAll(s, `\`, `\\`)
 	s = strings.ReplaceAll(s, `"`, `\"`)
+	s = strings.ReplaceAll(s, "\r\n", `\n`)
+	s = strings.ReplaceAll(s, "\n", `\n`)
+	s = strings.ReplaceAll(s, "\t", `\t`)
 	return `"` + s + `"`
 }
 

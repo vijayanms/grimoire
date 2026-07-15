@@ -29,58 +29,52 @@ func fetchKeaDHCPv4Subnet(ctx context.Context, f Fetcher, tracker LabelTracker) 
 		label := tracker.Derive(d.Subnet, d.Description, uuid)
 
 		// static routes: "dest,router;dest2,router2"
-		staticRoutes := ""
+		routeObjs := make([]string, 0)
 		if d.OptionData.StaticRoutes != "" {
 			pairs := strings.Split(d.OptionData.StaticRoutes, ";")
-			lines := make([]string, 0, len(pairs))
 			for _, p := range pairs {
 				parts := strings.SplitN(strings.TrimSpace(p), ",", 2)
 				if len(parts) == 2 && parts[0] != "" {
-					lines = append(lines, fmt.Sprintf(`
-    static_route {
-      destination = %s
-      router      = %s
-    }`, hclString(parts[0]), hclString(parts[1])))
+					routeObjs = append(routeObjs, fmt.Sprintf("{ destination_ip = %s, router_ip = %s }",
+						hclString(parts[0]), hclString(parts[1])))
 				}
 			}
-			staticRoutes = strings.Join(lines, "")
 		}
+		staticRoutes := "[" + strings.Join(routeObjs, ", ") + "]"
 
 		hcl := fmt.Sprintf(`resource "opnsense_kea_dhcpv4_subnet" %s {
-  subnet      = %s
-  next_server = %s
-  pools       = %s
+  subnet          = %s
+  pools           = %s
   match_client_id = %s
-  option_data_auto_collect = %s
-  description = %s
-
-  option_data {
-    routers             = %s
-    domain_name_servers = %s
-    domain_name         = %s
-    domain_search       = %s
-    ntp_servers         = %s
-    time_servers        = %s
-    tftp_server_name    = %s
-    boot_file_name      = %s%s
-  }
+  auto_collect    = %s
+  routers         = %s
+  static_routes   = %s
+  dns_servers     = %s
+  domain_name     = %s
+  domain_search   = %s
+  ntp_servers     = %s
+  time_servers    = %s
+  next_server     = %s
+  tftp_server     = %s
+  tftp_bootfile   = %s
+  description     = %s
 }
 `, hclString(label),
 			hclString(d.Subnet),
-			hclString(d.NextServer),
 			hclSet(splitNL(d.Pools)),
 			hclBool(stringToBool(d.MatchClientId)),
 			hclBool(stringToBool(d.OptionDataAutoCollect)),
-			hclString(d.Description),
 			hclSet([]string(d.OptionData.Routers)),
+			staticRoutes,
 			hclSet([]string(d.OptionData.DomainNameServers)),
 			hclString(d.OptionData.DomainName),
 			hclSet([]string(d.OptionData.DomainSearch)),
 			hclSet([]string(d.OptionData.NtpServers)),
 			hclSet([]string(d.OptionData.TimeServers)),
+			hclString(d.NextServer),
 			hclString(d.OptionData.TftpServerName),
 			hclString(d.OptionData.BootFileName),
-			staticRoutes)
+			hclString(d.Description))
 		entries = append(entries, Entry{UUID: uuid, Label: label, HCL: hcl})
 	}
 	return entries, nil

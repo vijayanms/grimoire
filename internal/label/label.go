@@ -20,11 +20,14 @@ func sanitizeLabel(s string) string {
 	}, s)
 	s = multiUnderRE.ReplaceAllString(s, "_")
 	s = strings.Trim(s, "_")
-	if len(s) > 63 {
-		s = s[:63]
-	}
 	if s == "" {
 		s = "resource"
+	}
+	if unicode.IsDigit(rune(s[0])) {
+		s = "_" + s
+	}
+	if len(s) > 63 {
+		s = s[:63]
 	}
 	return s
 }

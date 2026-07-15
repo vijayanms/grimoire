@@ -27,13 +27,12 @@ func fetchTrustCA(ctx context.Context, f Fetcher, tracker LabelTracker) ([]Entry
 		}
 		label := tracker.Derive(d.Description, d.CommonName, uuid)
 		hcl := fmt.Sprintf(`resource "opnsense_trust_ca" %s {
-  ref_id               = %s
   description          = %s
   action               = %s
   crt                  = %s
   prv                  = %s
   serial               = %s
-  ca_ref               = %s
+  caref                = %s
   key_type             = %s
   lifetime             = %s
   digest               = %s
@@ -45,14 +44,8 @@ func fetchTrustCA(ctx context.Context, f Fetcher, tracker LabelTracker) ([]Entry
   email                = %s
   common_name          = %s
   ocsp_uri             = %s
-  crt_payload          = %s
-  prv_payload          = %s
-  name                 = %s
-  valid_from           = %s
-  valid_to             = %s
 }
 `, hclString(label),
-			hclStringOrNull(d.RefId),
 			hclString(d.Description),
 			hclString(d.Action.String()),
 			hclString(d.Crt),
@@ -69,12 +62,7 @@ func fetchTrustCA(ctx context.Context, f Fetcher, tracker LabelTracker) ([]Entry
 			hclString(d.OrganizationalUnit),
 			hclString(d.Email),
 			hclString(d.CommonName),
-			hclString(d.OcspUri),
-			hclStringOrNull(d.CrtPayload),
-			hclStringOrNull(d.PrvPayload),
-			hclStringOrNull(d.Name),
-			hclStringOrNull(d.ValidFrom),
-			hclStringOrNull(d.ValidTo))
+			hclString(d.OcspUri))
 		entries = append(entries, Entry{UUID: uuid, Label: label, HCL: hcl})
 	}
 	return entries, nil

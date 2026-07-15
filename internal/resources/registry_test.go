@@ -33,6 +33,42 @@ func TestStringToInt64(t *testing.T) {
 	}
 }
 
+func TestStringToInt64Default(t *testing.T) {
+	cases := []struct {
+		in   string
+		def  int64
+		want int64
+	}{
+		{"", -1, -1},
+		{"abc", -1, -1},
+		{"0", -1, 0},
+		{"42", -1, 42},
+	}
+	for _, c := range cases {
+		if got := stringToInt64Default(c.in, c.def); got != c.want {
+			t.Errorf("stringToInt64Default(%q, %d) = %d, want %d", c.in, c.def, got, c.want)
+		}
+	}
+}
+
+func TestStringToFloat64Default(t *testing.T) {
+	cases := []struct {
+		in   string
+		def  float64
+		want float64
+	}{
+		{"", -1, -1},
+		{"abc", -1, -1},
+		{"0", -1, 0},
+		{"1.5", -1, 1.5},
+	}
+	for _, c := range cases {
+		if got := stringToFloat64Default(c.in, c.def); got != c.want {
+			t.Errorf("stringToFloat64Default(%q, %v) = %v, want %v", c.in, c.def, got, c.want)
+		}
+	}
+}
+
 func TestHclString(t *testing.T) {
 	got := hclString(`foo "bar" \baz`)
 	want := `"foo \"bar\" \\baz"`

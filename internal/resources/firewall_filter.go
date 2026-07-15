@@ -37,12 +37,12 @@ func fetchFirewallFilter(ctx context.Context, f Fetcher, tracker LabelTracker) (
   description      = %s
   categories       = %s
 
-  interface {
+  interface = {
     invert    = %s
     interface = %s
   }
 
-  filter {
+  filter = {
     quick         = %s
     action        = %s
     allow_options = %s
@@ -55,61 +55,61 @@ func fetchFirewallFilter(ctx context.Context, f Fetcher, tracker LabelTracker) (
     tcp_flags        = %s
     tcp_flags_out_of = %s
 
-    source {
+    source = {
       net    = %s
       port   = %s
       invert = %s
     }
 
-    destination {
+    destination = {
       net    = %s
       port   = %s
       invert = %s
     }
   }
 
-  stateful_firewall {
+  stateful_firewall = {
     type           = %s
     timeout        = %s
     overload_table = %s
     no_pfsync      = %s
 
-    adaptive_timeouts {
+    adaptive_timeouts = {
       start = %s
       end   = %s
     }
 
-    max {
+    max = {
       states             = %s
       source_nodes       = %s
       source_states      = %s
       source_connections  = %s
-      new_connections {
+      new_connections = {
         count   = %s
         seconds = %s
       }
     }
   }
 
-  traffic_shaping {
+  traffic_shaping = {
     shaper         = %s
     reverse_shaper = %s
   }
 
-  source_routing {
+  source_routing = {
     gateway          = %s
     disable_reply_to = %s
     reply_to         = %s
   }
 
-  priority {
+  priority = {
     match         = %s
     set           = %s
     low_delay_set = %s
     match_tos     = %s
   }
 
-  internal_tagging {
+  internal_tagging = {
     set_local   = %s
     match_local = %s
   }
@@ -140,25 +140,25 @@ func fetchFirewallFilter(ctx context.Context, f Fetcher, tracker LabelTracker) (
 			hclStringOrNull(d.DestinationPort),
 			hclBool(stringToBool(d.DestinationInvert)),
 			hclString(d.StateType.String()),
-			hclInt(stringToInt64(d.StateTimeout)),
+			hclInt(stringToInt64Default(d.StateTimeout, -1)),
 			hclStringOrNull(d.OverloadTable.String()),
 			hclBool(stringToBool(d.NoPfsync)),
-			hclInt(stringToInt64(d.AdaptiveTimeoutsStart)),
-			hclInt(stringToInt64(d.AdaptiveTimeoutsEnd)),
-			hclInt(stringToInt64(d.MaxStates)),
-			hclInt(stringToInt64(d.MaxSourceNodes)),
-			hclInt(stringToInt64(d.MaxSourceStates)),
-			hclInt(stringToInt64(d.MaxSourceConnections)),
-			hclInt(stringToInt64(d.MaxNewConnectionsCount)),
-			hclInt(stringToInt64(d.MaxNewConnectionsSeconds)),
+			hclInt(stringToInt64Default(d.AdaptiveTimeoutsStart, -1)),
+			hclInt(stringToInt64Default(d.AdaptiveTimeoutsEnd, -1)),
+			hclInt(stringToInt64Default(d.MaxStates, -1)),
+			hclInt(stringToInt64Default(d.MaxSourceNodes, -1)),
+			hclInt(stringToInt64Default(d.MaxSourceStates, -1)),
+			hclInt(stringToInt64Default(d.MaxSourceConnections, -1)),
+			hclInt(stringToInt64Default(d.MaxNewConnectionsCount, -1)),
+			hclInt(stringToInt64Default(d.MaxNewConnectionsSeconds, -1)),
 			hclStringOrNull(d.TrafficShaper.String()),
 			hclStringOrNull(d.TrafficShaperReverse.String()),
 			hclStringOrNull(d.Gateway.String()),
 			hclBool(stringToBool(d.DisableReplyTo)),
 			hclStringOrNull(d.ReplyTo.String()),
-			hclInt(stringToInt64(d.MatchPriority.String())),
-			hclInt(stringToInt64(d.SetPriority.String())),
-			hclInt(stringToInt64(d.SetPriorityLowDelay.String())),
+			hclInt(stringToInt64Default(d.MatchPriority.String(), -1)),
+			hclInt(stringToInt64Default(d.SetPriority.String(), -1)),
+			hclInt(stringToInt64Default(d.SetPriorityLowDelay.String(), -1)),
 			hclStringOrNull(d.MatchTOS.String()),
 			hclStringOrNull(d.SetLocalTag),
 			hclStringOrNull(d.MatchLocalTag))
